@@ -1,0 +1,65 @@
+# A badlang test file
+
+# test a built in
+var X 1;
+var Block X;
+var print X;
+
+print("Hi");
+print("Hi");
+
+print("Hi");
+
+
+var f Block={
+        print("Block Hi");
+    };
+
+f();
+
+f(1);
+
+f(1,1);
+
+f(f(),f(1,1));
+
+{
+    print(a);
+};
+# a;
+
+var a X;
+var b X;
+f.run().go.win.cool(a.b.c,b.s).go;
+
+
+var b1 Block={
+        print(b1);
+    };
+    
+var b2 Block={
+        print(b2);
+    };
+
+var Type X;    
+var struct X;
+var deref X;
+var t Type=struct({deref(t);});
+var t2 Type={struct(deref(t2));};
+var t3 Type;
+t3=struct(deref(t3)); # Non-sense?
+
+#Type Keyword instead?
+#Type t4={struct(deref(t4))}; #?
+
+# How to support first class Types, and recursive types?
+# Types are just a set of special functions, and they can be recursive,
+# maybe issue is just how to make helpers, like struct, work for recursive types.
+# Special "self" flag to struct handles self recursion, but not mutual recursive structs.
+
+var if X;
+if(a)({
+    b=a;
+}).else({
+
+});
