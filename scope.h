@@ -3,10 +3,15 @@
 #include <string>
 #include <map>
 
+class TypedValue;
+class DeclarationASTNode;
 
-class ScopeEntry{
+class ScopeEntry final{
 public:
-    ScopeEntry();
+    ~ScopeEntry();
+    ScopeEntry(const DeclarationASTNode *declaration);
+    const DeclarationASTNode *Declaration;
+    TypedValue *Variable;
 };
 
 

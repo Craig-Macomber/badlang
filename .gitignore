@@ -1,2 +1,5 @@
 a.out
 a.out.dSYM
+full.out
+full.out.dSYM
+*.o

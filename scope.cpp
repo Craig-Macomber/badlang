@@ -1,6 +1,7 @@
 #include "scope.h"
 
-ScopeEntry::ScopeEntry(){}
+
+ScopeEntry::ScopeEntry(const DeclarationASTNode *declaration):Declaration(declaration){}
 
 Scope::~Scope(){
     // TODO : maybe delete entries?

@@ -1,29 +1,12 @@
 #pragma once
 
-#include <cstdio>
-#include <cstdlib>
 #include <string>
-#include <map>
 #include <vector>
-#include <iostream>
-#include <assert.h>
-
-#include "llvm/DerivedTypes.h"
-#include "llvm/ExecutionEngine/ExecutionEngine.h"
-#include "llvm/ExecutionEngine/JIT.h"
-#include "llvm/LLVMContext.h"
-#include "llvm/Module.h"
-#include "llvm/PassManager.h"
-#include "llvm/Analysis/Verifier.h"
-#include "llvm/Analysis/Passes.h"
-#include "llvm/Target/TargetData.h"
-#include "llvm/Transforms/Scalar.h"
-#include "llvm/Support/IRBuilder.h"
-#include "llvm/Support/TargetSelect.h"
 
 #include "lex.h"
 #include "scope.h"
 
+class TypedValue;
 
 /// ASTNode - Base class for all expression nodes.
 class ASTNode {
@@ -38,11 +21,14 @@ class StatementASTNode : public ASTNode {
 public:
     virtual void Print(std::ostream &out, int indentAmmount) const;
     virtual void EditScope(Scope *scope) const;
+    virtual TypedValue *Codegen() = 0;
 protected:
     virtual void PrintContent(std::ostream &out, int indent)  const= 0;
 };
 
 class ExpressionASTNode : public ASTNode {
+public:
+    virtual TypedValue *Codegen() = 0;
 };
 
 
@@ -51,20 +37,9 @@ class ExpressionStatementASTNode : public StatementASTNode {
 public:
     ExpressionStatementASTNode(ExpressionASTNode *expression);
     virtual void ApplyScope(Scope *scope);
+    virtual TypedValue *Codegen();
 protected:
     virtual void PrintContent(std::ostream &out, int indent) const;
-};
-
-// TODO : Make Type an expression (here and in parser) not a String
-class DeclarationASTNode : public StatementASTNode {
-    std::string Name;
-    ExpressionASTNode *Type;
-    ExpressionASTNode *ValueNode;
-public:
-    DeclarationASTNode(std::string name, ExpressionASTNode *type, ExpressionASTNode *value=NULL);
-    virtual void PrintContent(std::ostream &out, int indent) const;
-    virtual void EditScope(Scope *scope) const;
-    virtual void ApplyScope(Scope *scope);
 };
 
 class BlockASTNode : public ExpressionASTNode {  
@@ -73,6 +48,7 @@ public:
     std::vector<StatementASTNode*> Statements;
     virtual void Print(std::ostream &out, int indentAmmount) const;
     virtual void ApplyScope(Scope *scope);
+    virtual TypedValue *Codegen();
 };
 
 class VariableASTNode : public ExpressionASTNode {  
@@ -82,6 +58,7 @@ public:
     const std::string &getName() const;
     virtual void Print(std::ostream &out, int indent) const;
     virtual void ApplyScope(Scope *scope);
+    virtual TypedValue *Codegen();
 };
 
 
@@ -91,6 +68,7 @@ class NumberASTNode : public ExpressionASTNode {
 public:
     NumberASTNode(double val);
     virtual void Print(std::ostream &out, int indent) const;
+    virtual TypedValue *Codegen();
 };
 
 
@@ -100,6 +78,7 @@ class StringASTNode : public ExpressionASTNode {
 public:
     StringASTNode(std::string val);
     virtual void Print(std::ostream &out, int indent) const;
+    virtual TypedValue *Codegen();
 };
 
 
@@ -111,6 +90,7 @@ public:
     CallASTNode(ExpressionASTNode *callee, std::vector<ExpressionASTNode *> &args);
     virtual void Print(std::ostream &out, int indent) const;
     virtual void ApplyScope(Scope *scope);
+    virtual TypedValue *Codegen();
 };
 
 class DotASTNode : public ExpressionASTNode {
@@ -120,6 +100,7 @@ public:
     DotASTNode(ExpressionASTNode *callee, std::string name);
     virtual void Print(std::ostream &out, int indent) const;
     virtual void ApplyScope(Scope *scope);
+    virtual TypedValue *Codegen();
 };
 
 
@@ -131,4 +112,18 @@ public:
     BinaryOpASTNode(ExpressionASTNode *left,const std::string &op, ExpressionASTNode *right);
     virtual void Print(std::ostream &out, int indent) const;
     virtual void ApplyScope(Scope *scope);
+    virtual TypedValue *Codegen();
+};
+
+class DeclarationASTNode : public StatementASTNode {
+    std::string Name;
+    ExpressionASTNode *Type;
+    ExpressionASTNode *ValueNode;
+    BinaryOpASTNode *AssignNode;
+public:
+    DeclarationASTNode(std::string name, ExpressionASTNode *type, ExpressionASTNode *value=NULL);
+    virtual void PrintContent(std::ostream &out, int indent) const;
+    virtual void EditScope(Scope *scope) const;
+    virtual void ApplyScope(Scope *scope);
+    virtual TypedValue *Codegen();
 };

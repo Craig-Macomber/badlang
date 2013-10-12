@@ -1,6 +1,5 @@
 #include "ast.h"
 
-
 ASTNode::~ASTNode(){
 
 }
@@ -41,6 +40,11 @@ DeclarationASTNode::DeclarationASTNode(std::string name, ExpressionASTNode *type
 Name(name) {
     Type=type;
     ValueNode=value;
+    if (ValueNode!=NULL){
+        // Make a helper BinaryOpASTNode for assignment
+        VariableASTNode *v=new VariableASTNode(Name);
+        AssignNode=new BinaryOpASTNode(v,"=",ValueNode);
+    }
 }   
 void DeclarationASTNode::PrintContent(std::ostream &out, int indent)  const{
     out << "var " << Name << " ";
@@ -51,12 +55,13 @@ void DeclarationASTNode::PrintContent(std::ostream &out, int indent)  const{
     }
 }
 void DeclarationASTNode::EditScope(Scope *scope) const{
-    scope->Add(Name,new ScopeEntry());
+    ScopeEntry *e=new ScopeEntry(this);
+    scope->Add(Name,e);
 }
 void DeclarationASTNode::ApplyScope(Scope *scope){
     Type->ApplyScope(scope);
-    if (ValueNode!=NULL){
-        ValueNode->ApplyScope(scope);
+    if (AssignNode!=NULL){
+        AssignNode->ApplyScope(scope);
     }
 }
 
@@ -81,21 +86,7 @@ void BlockASTNode::ApplyScope(Scope *inScope){
         Statements[i]->ApplyScope(&scope);
     }
     
-    // TODO :
-    // iterate over scope's ScopeEntries and collect variables
-    
-    // TODO :
-    // generate code, and return a function that can be passed a frame for the parent
-    
-    // frame contents:
-    // pointer to parent frame (may be NULL)
-    // Array of variables, each in format:
-    //      Type Pointer,Value Pointer
-    //      inited to (NULL,NULL)
-    // Declaration statements set Type pointer, and use Type to get size to allocate for value, then set Value pointer
-    
 }
-
 
 
 VariableASTNode::VariableASTNode(std::string name): Name(name) {}
@@ -113,12 +104,11 @@ void VariableASTNode::ApplyScope(Scope *scope){
 }
 
 
+
 NumberASTNode::NumberASTNode(double val) : Val(val) {}
 void NumberASTNode::Print(std::ostream &out, int indent) const{
     out << Val;
 }
-
-
 
 
 StringASTNode::StringASTNode(std::string val) : Val(val) {}
@@ -151,6 +141,7 @@ void CallASTNode::ApplyScope(Scope *scope){
 }
 
 
+
 DotASTNode::DotASTNode(ExpressionASTNode *callee, std::string name) : Name(name) {
     Callee=callee;
 }
@@ -161,6 +152,7 @@ void DotASTNode::Print(std::ostream &out, int indent) const{
 void DotASTNode::ApplyScope(Scope *scope){
     Callee->ApplyScope(scope);
 }
+
 
 
 BinaryOpASTNode::BinaryOpASTNode(ExpressionASTNode *left,const std::string &op, ExpressionASTNode *right):Op(op){
@@ -178,3 +170,5 @@ void BinaryOpASTNode::ApplyScope(Scope *scope){
     Left->ApplyScope(scope);
     Right->ApplyScope(scope);
 }
+
+
