@@ -92,7 +92,12 @@ static ExpressionASTNode *readExpression(Lexer *lex){
             lex->getNextToken();
             break;
         
-        case '=':
+        case '+':
+        case '-':
+        case '*':
+        case '/':
+        case '>':
+        case '<':
         // TODO : Add more binary operators here, add binding priority to readExpression
             {
                 std::string op;

@@ -28,11 +28,20 @@ enum Token {
   tok_unexpectedEOFInString=-101
 };
 
+class SourceRange {
+public:
+    // start = index of first char in token
+    // end = index AFTER last char in token
+    // end - start = length
+    int start, end;
+    SourceRange(int start, int end);
+};
 
 class Lexer {
 public:
     std::string StringValue;  // Filled in if tok_identifier or tok_string
     double NumVal;              // Filled in if tok_number
+    SourceRange range=SourceRange(-1,-1);
 
     /// CurTok/getNextToken - Provide a simple token buffer.  CurTok is the current
     /// token the parser is looking at.  getNextToken reads another token from the
@@ -41,6 +50,8 @@ public:
     int getNextToken();
 private:
     int gettok();
+    int pos = -1;
+    int readchar();
 };
 
 }

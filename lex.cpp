@@ -11,6 +11,12 @@
 namespace lex
 {
 
+int Lexer::readchar() {
+    pos++;
+    return getchar();
+}
+
+SourceRange::SourceRange(int start, int end): start(start), end(end){}
 
 /// gettok - Return the next token from standard input.
 int Lexer::gettok() {
@@ -18,12 +24,13 @@ int Lexer::gettok() {
     
     // Skip any whitespace.
     while (isspace(LastChar)){
-        LastChar = getchar();
+        LastChar = readchar();
     }
     
+    range = SourceRange(pos,pos);
     if (isalpha(LastChar)) { // identifier: [a-zA-Z][a-zA-Z0-9]*
         StringValue = LastChar;
-        while (isalnum((LastChar = getchar()))) {
+        while (isalnum((LastChar = readchar()))) {
             StringValue += LastChar;
         }
         
@@ -36,7 +43,7 @@ int Lexer::gettok() {
         std::string NumStr;
         do {
 			NumStr += LastChar;
-			LastChar = getchar();
+			LastChar = readchar();
         } while (isdigit(LastChar) || LastChar == '.');
         
         NumVal = strtod(NumStr.c_str(), 0);
@@ -45,7 +52,7 @@ int Lexer::gettok() {
     
     if (LastChar == '#') {
 		// Comment until end of line.
-		do LastChar = getchar();
+		do LastChar = readchar();
 		while (LastChar != EOF && LastChar != '\n' && LastChar != '\r');
 		
 		if (LastChar != EOF) {
@@ -56,11 +63,11 @@ int Lexer::gettok() {
     // string literals
     if (LastChar == '"') {
 		StringValue = "";
-		while ((LastChar = getchar()) != EOF && LastChar != '"'){
+		while ((LastChar = readchar()) != EOF && LastChar != '"'){
 			StringValue += LastChar;
 		} 
 		if (LastChar != EOF){
-			LastChar = getchar();
+			LastChar = readchar();
 			return tok_string;
 		} else {
 			return tok_unexpectedEOFInString;
@@ -73,7 +80,7 @@ int Lexer::gettok() {
     
     // Otherwise, just return the character as its ascii value.
     int ThisChar = LastChar;
-    LastChar = getchar();
+    LastChar = readchar();
     return ThisChar;
 }
 
@@ -88,6 +95,7 @@ int Lexer::gettok() {
 /// token the parser is looking at.  getNextToken reads another token from the
 /// lexer and updates CurTok with its results.
 int Lexer::getNextToken() {
+    range = SourceRange(range.start,pos);
 	return CurTok = gettok();
 }
 

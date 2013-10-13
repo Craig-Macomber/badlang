@@ -54,11 +54,12 @@ TypedValue *BlockASTNode::Codegen(){
     return NULL; //TODO
 }
 
-TypedValue *DeclarationASTNode::Codegen(){
+void DeclarationASTNode::Codegen(){
+    // TODO add code to block
     if (AssignNode!=NULL){
-        return AssignNode->Codegen();
+        AssignNode->Codegen();
     } else {
-        return NULL; // TODO : no-op
+        // TODO
     }
 }
 
@@ -68,6 +69,7 @@ TypedValue *NumberASTNode::Codegen(){
     return new TypedValueRaw(type,value);
 }
 
-TypedValue *ExpressionStatementASTNode::Codegen(){
-    return Expression->Codegen();
+void ExpressionStatementASTNode::Codegen(){
+    // TODO add code to block
+    Expression->Codegen();
 }

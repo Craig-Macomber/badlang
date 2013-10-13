@@ -8,7 +8,7 @@
 
 class TypedValue;
 
-/// ASTNode - Base class for all expression nodes.
+/// ASTNode - Base class for all AST nodes.
 class ASTNode {
 public:
     virtual ~ASTNode();
@@ -21,7 +21,7 @@ class StatementASTNode : public ASTNode {
 public:
     virtual void Print(std::ostream &out, int indentAmmount) const;
     virtual void EditScope(Scope *scope) const;
-    virtual TypedValue *Codegen() = 0;
+    virtual void Codegen() = 0;
 protected:
     virtual void PrintContent(std::ostream &out, int indent)  const= 0;
 };
@@ -37,7 +37,7 @@ class ExpressionStatementASTNode : public StatementASTNode {
 public:
     ExpressionStatementASTNode(ExpressionASTNode *expression);
     virtual void ApplyScope(Scope *scope);
-    virtual TypedValue *Codegen();
+    virtual void Codegen();
 protected:
     virtual void PrintContent(std::ostream &out, int indent) const;
 };
@@ -125,5 +125,5 @@ public:
     virtual void PrintContent(std::ostream &out, int indent) const;
     virtual void EditScope(Scope *scope) const;
     virtual void ApplyScope(Scope *scope);
-    virtual TypedValue *Codegen();
+    virtual void Codegen();
 };

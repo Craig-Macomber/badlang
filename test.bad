@@ -32,7 +32,7 @@ var a X;
 var b X;
 f.run().go.win.cool(a.b.c,b.s).go;
 
-
+var bx Block=1;
 var b1 Block={
         print(b1);
     };
@@ -46,8 +46,7 @@ var struct X;
 var deref X;
 var t Type=struct({deref(t);});
 var t2 Type={struct(deref(t2));};
-var t3 Type;
-t3=struct(deref(t3)); # Non-sense?
+var t3 Type=struct(deref(t3)); # Non-sense?
 
 #Type Keyword instead?
 #Type t4={struct(deref(t4))}; #?
@@ -59,7 +58,7 @@ t3=struct(deref(t3)); # Non-sense?
 
 var if X;
 if(a)({
-    b=a;
+    b+a;
 }).else({
 
 });
