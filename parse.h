@@ -3,4 +3,4 @@
 #include "ast.h"
 #include "lex.h"
 
-BlockASTNode * parse(Lexer *lex);
+BlockASTNode * parse(lex::Lexer *lex);

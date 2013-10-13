@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "../basicTypes.h"
+#include "basicTypes.h"
 
 //===----------------------------------------------------------------------===//
 // "Library" functions that can be "extern'd" from user code.

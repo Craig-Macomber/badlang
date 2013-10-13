@@ -1,5 +1,5 @@
 #include "type.h"
-#include "basicTypes.h"
+#include "runtime/basicTypes.h"
 
 #include <assert.h>
 

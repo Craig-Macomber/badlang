@@ -4,7 +4,7 @@
 #include "scope.h"
 
 int main() {
-    Lexer lex=Lexer();
+    lex::Lexer lex=lex::Lexer();
     BlockASTNode *root=parse(&lex);
     root->Print(std::cout,0);
     std::cout << std::endl;

@@ -8,6 +8,8 @@
 
 #include "lex.h"
 
+namespace lex
+{
 
 
 /// gettok - Return the next token from standard input.
@@ -120,3 +122,5 @@ int Lexer::getNextToken() {
 //     }
 //   }
 // }
+
+}

@@ -9,7 +9,7 @@
 #include "lex.h"
 #include "ast.h"
 
-
+using namespace lex;
 
 static StatementASTNode *readStatement(Lexer *lex);
 
