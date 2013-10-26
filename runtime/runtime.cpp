@@ -1,5 +1,7 @@
 #include <stddef.h>
 #include <stdlib.h>
+#include <iostream>
+#include <assert.h>
 
 #include "runtime.h"
 
@@ -9,7 +11,7 @@
 
 namespace runtime {
 
-/*
+
 ArgInfo makeArg(Value_Type t){
     ArgInfo a;
     a.srcType=ats_direct;
@@ -26,15 +28,18 @@ ArgInfo makeArg(ArgTypeSource t,int i) {
 
 void check(bool b){
     if (!b){
+        std::cout << "Check Failed" << std::endl;
         throw 2;
     }
 }
 
-void assert(bool b){
-    if (!b){
-        throw 3;
+void checkEqual(int a, int b){
+    if (a != b){
+        std::cout << "Check equal: " << a << ", " << b << std::endl;
+        check(false);
     }
 }
+
 
 void *heapAllocate(int size) {
   return malloc(size);
@@ -47,6 +52,7 @@ void *heapAllocateValue(Value_Type type) {
 
 
 bool isFunction(Value_Type tf) {
+    std::cout << "tf:" << tf << std::endl;
     return (tf->ParamType==Type_FunctionType);
 }
 
@@ -59,7 +65,7 @@ const FunctionInfo &getFuncInfo(Value_Type tf) {
 void checkFunctionAccepts(Value_Type tf, const std::vector<Value_Type> & argTypes) {
     check(isFunction(tf));
     const FunctionInfo &info=getFuncInfo(tf);
-    check(argTypes.size()==info.argTypes.size());
+    checkEqual(argTypes.size(), info.argTypes.size());
     for (int i=0;i<argTypes.size();i++) {
         check(info.argTypes[i].srcType==ats_direct);
         check(typeEquivalent(argTypes[i],info.argTypes[i].type));
@@ -70,7 +76,7 @@ void checkFunctionAccepts(Value_Type tf, const std::vector<Value_Type> & argType
 void checkFunctionReturns(Value_Type tf, const std::vector<Value_Type> & returnTypes) {
     check(isFunction(tf));
     FunctionInfo *info=(FunctionInfo *)(tf->Param);
-    check(returnTypes.size()==info->returnTypes.size());
+    checkEqual(returnTypes.size(), info->returnTypes.size());
     for (int i=0;i<returnTypes.size();i++) {
         check(info->returnTypes[i].srcType==ats_direct);
         check(typeEquivalent(returnTypes[i],info->returnTypes[i].type));
@@ -146,6 +152,7 @@ void invokeFunc(IndirectFunc *f, void *out, void *args) {
 void invokeFuncWrapper(Value_Type tf, Value_Func f, void *out, ...) {
     const FunctionInfo & info=getFuncInfo(tf);
     int size=getFuncArgsSize(info);
+    std::cout << "invokeFuncWrapper size:" << size << std::endl;
     int offset=0;
     char *args=(char *)alloca(size);
     
@@ -174,12 +181,13 @@ void invokeFuncWrapper(Value_Type tf, Value_Func f, void *out, ...) {
             argSrc=&argBox;
         }
         memcpy(args+offset,argSrc,argSize);
+        std::cout << "invokeFuncWrapper arg:" << offset << ", " <<  argSize << "At:" << (void*)(args+offset) << std::endl;
         argPtrs.push_back(args+offset);
         offset+=argSize;
     }
     assert(offset==size);
     
-    invokeFunc(f,args,out);
+    invokeFunc(f,out,args);
     
     va_end(ap); //cleanup
 }
@@ -192,11 +200,6 @@ std::vector<ArgInfo> _makeTypeValueReturnArgs(){
 }
 
 const std::vector<ArgInfo> typeValueReturnArgs = _makeTypeValueReturnArgs();
-typedef struct {
-    Value_Type t;
-    void *Box;
-} TypeValuePair;
-
 
 Value_Type makeFunctionType(FunctionInfo &info) {
     Value_Type tf=new TypeInfo();
@@ -213,7 +216,7 @@ Value_Type makeFunctionType(FunctionInfo &info) {
 
 FunctionInfo::FunctionInfo(std::vector<ArgInfo> argTypes,std::vector<ArgInfo> returnTypes):
     argTypes(argTypes),returnTypes(returnTypes) {
-    checkFunctionValid(*this);
+    // TODO: checkFunctionValid(*this);
 }
 
 FunctionInfo _makeDotInfo(){
@@ -226,19 +229,22 @@ FunctionInfo _makeDotInfo(){
 FunctionInfo dotInfo = _makeDotInfo();
 const Value_Type dotType = makeFunctionType(dotInfo);
 
-// invokes the dot function for ta, and returns the resulting atribute fetcher function
+// invokes the dot function for t, and returns the resulting atribute fetcher function
 TypeValuePair dot(Value_Type t, const std::string &text) {
     TypeValuePair p;
-    invokeFuncWrapper(dotType,t->Dot,&p,&t,&text);
+    std::string s = text;
+    std::cout << "dot:" << s << std::endl;
+    invokeFuncWrapper(dotType,t->Dot,&p,&t,&s);
     
     // The return type[s] of the atributeFetcherFunction may vary
     // But it is required accept an instance of Type t, so check that:
     std::vector<Value_Type> args;
     args.push_back(t);
-    checkFunctionAccepts(t,args);
+    checkFunctionAccepts(p.t,args);
     
     return p;
 }
+
 
 
 Value_Type pointerType(Value_Type t) {
@@ -256,8 +262,12 @@ std::vector<ArgInfo> _makeCallArgs() {
 }
 const std::vector<ArgInfo> _callArgs = _makeCallArgs();
 
-FunctionInfo callInfo(_callArgs,typeValueReturnArgs);
+
+FunctionInfo callInfo = FunctionInfo(_callArgs,typeValueReturnArgs);
+
 const Value_Type callType = makeFunctionType(callInfo);
+
+
 
 Value_Func getCallFunc(Value_Type ta, void *a, const std::vector<Value_Type> & argTypes, Value_Type *funcTypeOut) {
     // Is a a function?
@@ -279,7 +289,7 @@ Value_Func getOperatorFunc(const std::string & op, Value_Type ta, void *a, Value
     const FunctionInfo &atributeFetcherFunctionInfo=getFuncInfo(tv.t);
     
     // atribute for an operator must be a single value, so check that it is:
-    check(atributeFetcherFunctionInfo.returnTypes.size()==0);
+    check(atributeFetcherFunctionInfo.returnTypes.size()==1);
     
     // TODO : support ats_param
     check(atributeFetcherFunctionInfo.returnTypes[0].srcType==ats_direct);
@@ -294,6 +304,7 @@ Value_Func getOperatorFunc(const std::string & op, Value_Type ta, void *a, Value
     
     invokeFuncWrapper(tv.t,atributeFetcherFunction,out,a);
     std::vector<Value_Type> argTypes;
+    argTypes.push_back(ta);
     argTypes.push_back(tb);
     return getCallFunc(atributeType,out,argTypes,funcTypeOut);
 }
@@ -304,10 +315,11 @@ Value_Func getOperatorFunc(const std::string & op, Value_Type ta, void *a, Value
 // - Lookups cannot be done eagerly
 // - Return type cannot the computed eagerly
 // - Cannot avoid allocations
+// Caller must free result.
 void *applyOperator(const std::string & op, Value_Type ta, void *a, Value_Type tb, void *b, Value_Type *funcTypeOut) {
     Value_Func f=getOperatorFunc(op,ta,a,tb,funcTypeOut);
     int size=getFuncReturnSize(getFuncInfo(*funcTypeOut));
-    void *out=alloca(size);
+    void *out=heapAllocate(size);
     invokeFuncWrapper(*funcTypeOut,f,out,a,b);
     return out;
 }
@@ -360,6 +372,15 @@ bool typeEquivalent(Value_Type a, Value_Type b) {
     }
     return valuesEqual(a->ParamType,a->Param,b->Param);
 }
-*/
+
+void test(){
+    double a=1,b=2;
+    assert(valuesEqual(Type_Type,&Type_Type,&Type_Type));
+    assert(!valuesEqual(Type_Type,&Type_Type,&Type_Double));
+    assert(valuesEqual(Type_Type,&Type_Double,&Type_Double));
+    assert(!valuesEqual(Type_Double,&a,&b));
+    b=1;
+    assert(valuesEqual(Type_Double,&a,&b));
+}
 
 }

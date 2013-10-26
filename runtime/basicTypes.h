@@ -69,7 +69,7 @@ typedef struct FunctionInfo{
     const std::vector<ArgInfo> argTypes;
     const std::vector<ArgInfo> returnTypes;
 } FunctionInfo;
- 
+
 
 extern Value_Type Type_Type;
 extern Value_Type Type_Bool;
@@ -82,5 +82,11 @@ extern Value_Type Type_Int;
 // Causes Call to be special cased to avoid infinite recursion when trying to call something
 extern Value_Type Type_FunctionType;
 // TypeInfo Type_ExampleFunction={sizeof(IndirectFunc *),false,NULL,NULL,Type_FunctionType,NULL};
+
+// Runtime helper C++ types
+typedef struct {
+    Value_Type t;
+    void *Box;
+} TypeValuePair;
 
 }
