@@ -7,27 +7,25 @@
 
 namespace runtime {
 
-bool _BasicCompare(double a, double b){
-    std::cout << "double compare:" << a << ", " << b << std::endl;
-    return a==b;
+template <class C>
+Value_Type GetValueType(){
+    static TypeInfo _Type_C={sizeof(C),true,NULL,NULL,NULL,NULL};
+    return &_Type_C;
 }
 
+template <int size>
 void BasicCompare(void* out, void* args, void *context){
-    *((bool*)(out))=_BasicCompare(((double*)args)[0],((double*)args)[1]);
+    *((bool*)(out))= 0==memcmp(args,(char*)args+size,size);
 }
-IndirectFunc DefaultCompare={&BasicCompare,NULL};
 
-FunctionInfo _makeCompareInfo(){
+FunctionInfo _makeCompareInfo(Value_Type Type_C){
     std::vector<ArgInfo> infoArgs;
-    infoArgs.push_back(makeArg(Type_Double));
-    infoArgs.push_back(makeArg(Type_Double));
+    infoArgs.push_back(makeArg(Type_C));
+    infoArgs.push_back(makeArg(Type_C));
     std::vector<ArgInfo> returnArgs;
     returnArgs.push_back(makeArg(Type_Bool));
     return FunctionInfo(infoArgs, returnArgs);
 }
-
-FunctionInfo compareInfo = _makeCompareInfo();
-const Value_Type compareType = makeFunctionType(compareInfo);
 
 FunctionInfo _makeAtributeFetcherInfo(Value_Type type, Value_Type returnType){
     std::vector<ArgInfo> infoArgs;
@@ -36,51 +34,60 @@ FunctionInfo _makeAtributeFetcherInfo(Value_Type type, Value_Type returnType){
     returnArgs.push_back(makeArg(returnType));
     return FunctionInfo(infoArgs, returnArgs);
 }
-FunctionInfo equalsFetcherInfo = _makeAtributeFetcherInfo(Type_Double, compareType);
-const Value_Type equalsFetcherType = makeFunctionType(equalsFetcherInfo);
 
-void _DoubleEqualsFetcher(void* out, void* args, void *context){
+template <int size>
+void _EqualsFetcher(void* out, void* args, void *context){
+    static IndirectFunc DefaultCompare={&BasicCompare<size>,NULL};
     *(Value_Func*)out=&DefaultCompare;
 }
-IndirectFunc DoubleEqualsFetcher={&_DoubleEqualsFetcher,NULL}; 
 
-TypeValuePair _BasicDot(Value_Type type, std::string &name, void* context){
+template <int size>
+TypeValuePair _BasicDot(Value_Type type, std::string &name, Value_Type Type_C){
     std::cout << "Dot:" << name << std::endl;
     assert(name == "==");
     TypeValuePair p;
+    
+    static FunctionInfo compareInfo = _makeCompareInfo(Type_C);
+    static Value_Type compareType = makeFunctionType(compareInfo);
+    static FunctionInfo equalsFetcherInfo = _makeAtributeFetcherInfo(Type_C, compareType);
+    static Value_Type equalsFetcherType = makeFunctionType(equalsFetcherInfo);
+    
+    
     p.t=equalsFetcherType;
     check(isFunction(p.t));
     std::cout << "f:" << p.t << std::endl;
     Value_Func *v=(Value_Func *)heapAllocate(sizeof(Value_Func));
-    *v=&DoubleEqualsFetcher;
+    
+    static IndirectFunc EqualsFetcher={&_EqualsFetcher<size>,NULL}; 
+    
+    *v=&EqualsFetcher;
     p.Box=v;
     return p;
 }
 
-
-
+template <class C>
 void BasicDot(void* out, void* args, void *context){
     std::cout << "BasicDot:" << args << ", " << ((Value_Type*)args) << ", " << ((std::string*)((char*)args+sizeof(Value_Type)))<< std::endl;
     Value_Type type=*((Value_Type*)args);
     std::string &name=*((std::string*)((char*)args+sizeof(Value_Type)));
-    *((TypeValuePair*)(out))=_BasicDot(type,name,context);
+    *((TypeValuePair*)(out))=_BasicDot<sizeof(C)>(type,name,GetValueType<C>());
 }
-IndirectFunc DefaultDot={&BasicDot,NULL};
 
+template <class C>
+Value_Type MakeValueType(){
+    Value_Type Type_C = GetValueType<C>();
+    static IndirectFunc DefaultDot={&BasicDot<C>,NULL};
+    
+    Type_C->Dot = &DefaultDot;
+    return Type_C;
+}
 
-TypeInfo _Type_Type={sizeof(Value_Type),true,NULL,NULL,NULL,NULL};
-TypeInfo _Type_Bool={sizeof(bool),true,NULL,NULL,NULL,NULL};
-TypeInfo _Type_Double={sizeof(double),true,&DefaultDot,NULL,NULL,NULL};
-TypeInfo _Type_TypeInfo={sizeof(TypeInfo),true,NULL,NULL,NULL,NULL};
-TypeInfo _Type_String={sizeof(std::string),true,NULL,NULL,NULL,NULL};
-TypeInfo _Type_Int={sizeof(int),true,NULL,NULL,NULL,NULL};
-
-Value_Type Type_Type=&_Type_Type;
-Value_Type Type_Bool=&_Type_Bool;
-Value_Type Type_Double=&_Type_Double;
-Value_Type Type_TypeInfo=&_Type_TypeInfo;
-Value_Type Type_String=&_Type_String;
-Value_Type Type_Int=&_Type_Int;
+Value_Type Type_Type=MakeValueType<Value_Type>();
+Value_Type Type_Bool=MakeValueType<bool>();
+Value_Type Type_Double=MakeValueType<double>();
+Value_Type Type_TypeInfo=MakeValueType<TypeInfo>();
+Value_Type Type_String=MakeValueType<std::string>();
+Value_Type Type_Int=MakeValueType<int>();
 
 // Don't use this type to user code. If used as the ParamType for another type, that type is considered a function
 // Causes Call to be special cased to avoid infinite recursion when trying to call something

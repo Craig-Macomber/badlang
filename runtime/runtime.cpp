@@ -356,6 +356,7 @@ bool valuesEqual(Value_Type t, void *a, void *b) {
 // Also, 2 separately defined vectors of the same type are equal, etc.
 
 bool typeEquivalent(Value_Type a, Value_Type b) {
+    std::cout << "typeEquivalent" << a << " =? " << b << std::endl;
     if (a==b){
         return true;
     }
@@ -363,7 +364,7 @@ bool typeEquivalent(Value_Type a, Value_Type b) {
         return false;
     }
     if (a->Size!=b->Size || a->Dot!=b->Dot || a->Call!=b->Call){
-        // Assumes shallow equality tests is enough for Dot and Call (function equality, ick!)
+        // TODO: Assumes shallow equality tests is enough for Dot and Call (function equality, ick!)
         // This may be an issue if they are implemented as closures (Is anything not a closure?)
         return false; 
     }
