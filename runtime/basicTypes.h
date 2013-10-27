@@ -89,4 +89,7 @@ typedef struct {
     void *Box;
 } TypeValuePair;
 
+template <class C>
+Value_Type WrapType();
+
 }

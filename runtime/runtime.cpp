@@ -52,7 +52,6 @@ void *heapAllocateValue(Value_Type type) {
 
 
 bool isFunction(Value_Type tf) {
-    std::cout << "tf:" << tf << std::endl;
     return (tf->ParamType==Type_FunctionType);
 }
 
@@ -152,7 +151,6 @@ void invokeFunc(IndirectFunc *f, void *out, void *args) {
 void invokeFuncWrapper(Value_Type tf, Value_Func f, void *out, ...) {
     const FunctionInfo & info=getFuncInfo(tf);
     int size=getFuncArgsSize(info);
-    std::cout << "invokeFuncWrapper size:" << size << std::endl;
     int offset=0;
     char *args=(char *)alloca(size);
     
@@ -181,7 +179,6 @@ void invokeFuncWrapper(Value_Type tf, Value_Func f, void *out, ...) {
             argSrc=&argBox;
         }
         memcpy(args+offset,argSrc,argSize);
-        std::cout << "invokeFuncWrapper arg:" << offset << ", " <<  argSize << "At:" << (void*)(args+offset) << std::endl;
         argPtrs.push_back(args+offset);
         offset+=argSize;
     }
@@ -233,7 +230,6 @@ const Value_Type dotType = makeFunctionType(dotInfo);
 TypeValuePair dot(Value_Type t, const std::string &text) {
     TypeValuePair p;
     std::string s = text;
-    std::cout << "dot:" << s << std::endl;
     invokeFuncWrapper(dotType,t->Dot,&p,&t,&s);
     
     // The return type[s] of the atributeFetcherFunction may vary
@@ -356,7 +352,6 @@ bool valuesEqual(Value_Type t, void *a, void *b) {
 // Also, 2 separately defined vectors of the same type are equal, etc.
 
 bool typeEquivalent(Value_Type a, Value_Type b) {
-    std::cout << "typeEquivalent" << a << " =? " << b << std::endl;
     if (a==b){
         return true;
     }

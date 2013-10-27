@@ -43,7 +43,6 @@ void _EqualsFetcher(void* out, void* args, void *context){
 
 template <int size>
 TypeValuePair _BasicDot(Value_Type type, std::string &name, Value_Type Type_C){
-    std::cout << "Dot:" << name << std::endl;
     assert(name == "==");
     TypeValuePair p;
     
@@ -52,10 +51,8 @@ TypeValuePair _BasicDot(Value_Type type, std::string &name, Value_Type Type_C){
     static FunctionInfo equalsFetcherInfo = _makeAtributeFetcherInfo(Type_C, compareType);
     static Value_Type equalsFetcherType = makeFunctionType(equalsFetcherInfo);
     
-    
     p.t=equalsFetcherType;
     check(isFunction(p.t));
-    std::cout << "f:" << p.t << std::endl;
     Value_Func *v=(Value_Func *)heapAllocate(sizeof(Value_Func));
     
     static IndirectFunc EqualsFetcher={&_EqualsFetcher<size>,NULL}; 
@@ -67,7 +64,6 @@ TypeValuePair _BasicDot(Value_Type type, std::string &name, Value_Type Type_C){
 
 template <class C>
 void BasicDot(void* out, void* args, void *context){
-    std::cout << "BasicDot:" << args << ", " << ((Value_Type*)args) << ", " << ((std::string*)((char*)args+sizeof(Value_Type)))<< std::endl;
     Value_Type type=*((Value_Type*)args);
     std::string &name=*((std::string*)((char*)args+sizeof(Value_Type)));
     *((TypeValuePair*)(out))=_BasicDot<sizeof(C)>(type,name,GetValueType<C>());
@@ -82,17 +78,22 @@ Value_Type MakeValueType(){
     return Type_C;
 }
 
-Value_Type Type_Type=MakeValueType<Value_Type>();
-Value_Type Type_Bool=MakeValueType<bool>();
-Value_Type Type_Double=MakeValueType<double>();
-Value_Type Type_TypeInfo=MakeValueType<TypeInfo>();
-Value_Type Type_String=MakeValueType<std::string>();
-Value_Type Type_Int=MakeValueType<int>();
+template <class C>
+Value_Type WrapType(){
+    static Value_Type t = MakeValueType<C>();
+    return t;
+}
+
+Value_Type Type_Type=WrapType<Value_Type>();
+Value_Type Type_Bool=WrapType<bool>();
+Value_Type Type_Double=WrapType<double>();
+Value_Type Type_TypeInfo=WrapType<TypeInfo>();
+Value_Type Type_String=WrapType<std::string>();
+Value_Type Type_Int=WrapType<int>();
 
 // Don't use this type to user code. If used as the ParamType for another type, that type is considered a function
 // Causes Call to be special cased to avoid infinite recursion when trying to call something
-TypeInfo _Type_FunctionType={sizeof(FunctionInfo),true,NULL,NULL,NULL,NULL};
-Value_Type Type_FunctionType=&_Type_FunctionType;
+Value_Type Type_FunctionType=WrapType<FunctionInfo>();
 // TypeInfo Type_ExampleFunction={sizeof(IndirectFunc *),false,NULL,NULL,Type_FunctionType,NULL};
 
 }
