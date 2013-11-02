@@ -36,13 +36,13 @@ FunctionInfo _makeAtributeFetcherInfo(Value_Type type, Value_Type returnType){
 }
 
 template <int size>
-void _EqualsFetcher(void* out, void* args, void *context){
+void _equalsFetcher(void* out, void* args, void *context){
     static IndirectFunc DefaultCompare={&BasicCompare<size>,NULL};
     *(Value_Func*)out=&DefaultCompare;
 }
 
 template <int size>
-TypeValuePair _BasicDot(Value_Type type, std::string &name, Value_Type Type_C){
+TypeValuePair _basicDot(Value_Type type, std::string &name, Value_Type Type_C){
     assert(name == "==");
     TypeValuePair p;
     
@@ -55,7 +55,7 @@ TypeValuePair _BasicDot(Value_Type type, std::string &name, Value_Type Type_C){
     check(isFunction(p.t));
     Value_Func *v=(Value_Func *)heapAllocate(sizeof(Value_Func));
     
-    static IndirectFunc EqualsFetcher={&_EqualsFetcher<size>,NULL}; 
+    static IndirectFunc EqualsFetcher={&_equalsFetcher<size>,NULL}; 
     
     *v=&EqualsFetcher;
     p.Box=v;
@@ -66,7 +66,7 @@ template <class C>
 void BasicDot(void* out, void* args, void *context){
     Value_Type type=*((Value_Type*)args);
     std::string &name=*((std::string*)((char*)args+sizeof(Value_Type)));
-    *((TypeValuePair*)(out))=_BasicDot<sizeof(C)>(type,name,GetValueType<C>());
+    *((TypeValuePair*)(out))=_basicDot<sizeof(C)>(type,name,GetValueType<C>());
 }
 
 template <class C>
