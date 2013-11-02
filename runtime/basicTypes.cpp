@@ -18,6 +18,12 @@ void BasicCompare(void* out, void* args, void *context){
     *((bool*)(out))= 0==memcmp(args,(char*)args+size,size);
 }
 
+template <class C>
+void BasicCompare(void* out, void* args, void *context){
+    C *a = (C*)args;
+    *((bool*)(out)) = a[0]==a[1];
+}
+
 FunctionInfo _makeCompareInfo(Value_Type Type_C){
     std::vector<ArgInfo> infoArgs;
     infoArgs.push_back(makeArg(Type_C));
@@ -35,13 +41,13 @@ FunctionInfo _makeAtributeFetcherInfo(Value_Type type, Value_Type returnType){
     return FunctionInfo(infoArgs, returnArgs);
 }
 
-template <int size>
+template <class C>
 void _equalsFetcher(void* out, void* args, void *context){
-    static IndirectFunc DefaultCompare={&BasicCompare<size>,NULL};
+    static IndirectFunc DefaultCompare={&BasicCompare<C>,NULL};
     *(Value_Func*)out=&DefaultCompare;
 }
 
-template <int size>
+template <class C>
 TypeValuePair _basicDot(Value_Type type, std::string &name, Value_Type Type_C){
     assert(name == "==");
     TypeValuePair p;
@@ -55,7 +61,7 @@ TypeValuePair _basicDot(Value_Type type, std::string &name, Value_Type Type_C){
     check(isFunction(p.t));
     Value_Func *v=(Value_Func *)heapAllocate(sizeof(Value_Func));
     
-    static IndirectFunc EqualsFetcher={&_equalsFetcher<size>,NULL}; 
+    static IndirectFunc EqualsFetcher={&_equalsFetcher<C>,NULL}; 
     
     *v=&EqualsFetcher;
     p.Box=v;
@@ -66,7 +72,7 @@ template <class C>
 void BasicDot(void* out, void* args, void *context){
     Value_Type type=*((Value_Type*)args);
     std::string &name=*((std::string*)((char*)args+sizeof(Value_Type)));
-    *((TypeValuePair*)(out))=_basicDot<sizeof(C)>(type,name,GetValueType<C>());
+    *((TypeValuePair*)(out))=_basicDot<C>(type,name,GetValueType<C>());
 }
 
 template <class C>
@@ -95,5 +101,6 @@ Value_Type Type_Int=WrapType<int>();
 // Causes Call to be special cased to avoid infinite recursion when trying to call something
 Value_Type Type_FunctionType=WrapType<FunctionInfo>();
 // TypeInfo Type_ExampleFunction={sizeof(IndirectFunc *),false,NULL,NULL,Type_FunctionType,NULL};
+
 
 }

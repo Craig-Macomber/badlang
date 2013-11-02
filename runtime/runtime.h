@@ -44,6 +44,9 @@ ArgInfo makeArg(Value_Type t);
 ArgInfo makeArg(ArgTypeSource t,int i);
 bool isFunction(Value_Type tf);
 
+bool operator==(TypeInfo& lhs, TypeInfo& rhs);
+bool operator==(const ArgInfo& lhs, const ArgInfo& rhs);
+bool operator==(const FunctionInfo& lhs, const FunctionInfo& rhs);
 void test();
 
 }

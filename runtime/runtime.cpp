@@ -369,6 +369,20 @@ bool typeEquivalent(Value_Type a, Value_Type b) {
     return valuesEqual(a->ParamType,a->Param,b->Param);
 }
 
+bool operator==(TypeInfo& lhs, TypeInfo& rhs){
+    return typeEquivalent(&lhs, &rhs);
+}
+
+bool operator==(const ArgInfo& lhs, const ArgInfo& rhs){
+    if (lhs.srcType != rhs.srcType) return false;
+    if (lhs.srcType == ats_direct) return lhs.type == rhs.type;
+    return lhs.paramIndex == rhs.paramIndex;
+}
+
+bool operator==(const FunctionInfo& lhs, const FunctionInfo& rhs){
+    return lhs.argTypes == rhs.argTypes && lhs.returnTypes == rhs.returnTypes;
+}
+
 void test(){
     double a=1,b=2;
     assert(valuesEqual(Type_Type,&Type_Type,&Type_Type));

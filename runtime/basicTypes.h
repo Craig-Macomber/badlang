@@ -47,7 +47,7 @@ typedef struct TypeInfo{
  
     // Data that may be useful to Call and Dot, such as Type paramaters
     struct TypeInfo *ParamType;
-    void *Param;
+    void *Param;    
 } TypeInfo, *Value_Type;
 
 enum ArgTypeSource {
