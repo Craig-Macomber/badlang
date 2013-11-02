@@ -49,22 +49,24 @@ void _equalsFetcher(void* out, void* args, void *context){
 
 template <class C>
 TypeValuePair _basicDot(Value_Type type, std::string &name, Value_Type Type_C){
-    assert(name == "==");
     TypeValuePair p;
     
-    static FunctionInfo compareInfo = _makeCompareInfo(Type_C);
-    static Value_Type compareType = makeFunctionType(compareInfo);
-    static FunctionInfo equalsFetcherInfo = _makeAtributeFetcherInfo(Type_C, compareType);
-    static Value_Type equalsFetcherType = makeFunctionType(equalsFetcherInfo);
+    if (name=="=="){
+        static FunctionInfo compareInfo = _makeCompareInfo(Type_C);
+        static Value_Type compareType = makeFunctionType(compareInfo);
+        static FunctionInfo equalsFetcherInfo = _makeAtributeFetcherInfo(Type_C, compareType);
+        static Value_Type equalsFetcherType = makeFunctionType(equalsFetcherInfo);
+        p.t=equalsFetcherType;
+        check(isFunction(p.t));
+        Value_Func *v=(Value_Func *)heapAllocate(sizeof(Value_Func));
     
-    p.t=equalsFetcherType;
-    check(isFunction(p.t));
-    Value_Func *v=(Value_Func *)heapAllocate(sizeof(Value_Func));
+        static IndirectFunc EqualsFetcher={&_equalsFetcher<C>,NULL}; 
     
-    static IndirectFunc EqualsFetcher={&_equalsFetcher<C>,NULL}; 
-    
-    *v=&EqualsFetcher;
-    p.Box=v;
+        *v=&EqualsFetcher;
+        p.Box=v;
+    } else {
+        assert(false);
+    }
     return p;
 }
 
